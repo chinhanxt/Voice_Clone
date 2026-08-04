@@ -1,0 +1,8 @@
+omnivoice
+torch
+torchaudio
+gradio
+transformers
+accelerate
+soundfile
+scipy
