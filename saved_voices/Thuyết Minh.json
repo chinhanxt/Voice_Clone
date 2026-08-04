@@ -7,5 +7,6 @@
   "cfg_scale": 2.0,
   "denoise": true,
   "preprocess": true,
-  "postprocess": true
+  "postprocess": true,
+  "audio_b64": "dmVyc2lvbiBodHRwczovL2dpdC1sZnMuZ2l0aHViLmNvbS9zcGVjL3YxCm9pZCBzaGEyNTY6Yjc4OWRjNjRhYzkxYWY0NDc4MjM1MmQzYmZmNGQ2NjEzNTNkMjI0YjM0MTllOWU3YmUzNDhlYThhNmE3ZjBkZApzaXplIDE2Mjg1NjgK"
 }

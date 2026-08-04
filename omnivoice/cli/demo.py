@@ -67,6 +67,7 @@ _LANG_MAP_VI_TO_EN = {
 _ALL_LANGUAGES = ["Tự động"] + list(_LANG_MAP_VI_TO_EN.keys())
 
 
+import base64
 import unicodedata
 
 
@@ -75,7 +76,7 @@ def get_saved_voices():
         os.makedirs(VOICES_DIR, exist_ok=True)
     voices = []
     for f in os.listdir(VOICES_DIR):
-        if f.endswith((".wav", ".mp3", ".m4a")):
+        if f.endswith((".json", ".wav", ".mp3", ".m4a")):
             name = os.path.splitext(f)[0]
             if name.startswith(("10s_", "giong_sach_", "extracted_", "temp_")):
                 continue
@@ -109,7 +110,14 @@ def save_voice_preset(
     try:
         shutil.copy(ref_audio, dest_audio)
 
-        # Save voice metadata and style settings to JSON
+        b64_str = None
+        try:
+            with open(ref_audio, "rb") as rf:
+                b64_str = base64.b64encode(rf.read()).decode("utf-8")
+        except Exception:
+            pass
+
+        # Save voice metadata, style settings, and embedded audio to JSON
         metadata = {
             "ref_text": ref_text.strip() if ref_text else "",
             "language": language or "Tự động",
@@ -122,6 +130,7 @@ def save_voice_preset(
             "denoise": bool(denoise),
             "preprocess": bool(preprocess),
             "postprocess": bool(postprocess),
+            "audio_b64": b64_str,
         }
 
         dest_json = os.path.join(VOICES_DIR, f"{clean_name}.json")
@@ -144,17 +153,6 @@ def load_voice_preset(voice_name):
     audio_path = None
     target_norm = unicodedata.normalize("NFC", str(voice_name).strip())
 
-    if os.path.exists(VOICES_DIR):
-        for f in os.listdir(VOICES_DIR):
-            f_stem, f_ext = os.path.splitext(f)
-            if f_ext.lower() in [".wav", ".mp3", ".m4a"]:
-                if unicodedata.normalize("NFC", f_stem) == target_norm:
-                    audio_path = os.path.join(VOICES_DIR, f)
-                    break
-
-    if not audio_path:
-        return None, "", "Tự động", 1.0, None, 16, 2.0, True, True, True
-
     # Default values
     ref_text = ""
     language = "Tự động"
@@ -166,7 +164,7 @@ def load_voice_preset(voice_name):
     preprocess = True
     postprocess = True
 
-    # Try loading from JSON metadata
+    # 1. Try loading from JSON metadata (including embedded audio_b64)
     json_path = None
     if os.path.exists(VOICES_DIR):
         for f in os.listdir(VOICES_DIR):
@@ -189,7 +187,24 @@ def load_voice_preset(voice_name):
                 denoise = data.get("denoise", True)
                 preprocess = data.get("preprocess", True)
                 postprocess = data.get("postprocess", True)
+                b64_str = data.get("audio_b64")
+                if b64_str:
+                    os.makedirs(TEMP_WORK_DIR, exist_ok=True)
+                    tmp_wav = os.path.join(TEMP_WORK_DIR, f"preset_{target_norm}.wav")
+                    with open(tmp_wav, "wb") as wf:
+                        wf.write(base64.b64decode(b64_str))
+                    audio_path = tmp_wav
         except Exception:
+            pass
+
+    # 2. Fallback to physical audio file if audio_b64 was missing
+    if not audio_path and os.path.exists(VOICES_DIR):
+        for f in os.listdir(VOICES_DIR):
+            f_stem, f_ext = os.path.splitext(f)
+            if f_ext.lower() in [".wav", ".mp3", ".m4a"]:
+                if unicodedata.normalize("NFC", f_stem) == target_norm:
+                    audio_path = os.path.join(VOICES_DIR, f)
+                    break
             pass
             # Fallback to reading raw txt
             txt_path = os.path.join(VOICES_DIR, f"{voice_name}.txt")

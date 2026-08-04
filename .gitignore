@@ -6,6 +6,9 @@ __pycache__/
 *.log
 gradio.log
 temp_work/
-saved_voices/
+saved_voices/*.wav
+saved_voices/*.mp3
+saved_voices/*.m4a
+!saved_voices/*.json
 .hf_cache/
 .DS_Store
