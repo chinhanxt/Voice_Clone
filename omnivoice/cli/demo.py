@@ -1382,6 +1382,7 @@ def build_demo(
                 vc_po,
             ],
             outputs=[vc_audio, vc_status, vc_ref_text],
+            api_name=False,
         )
 
         def _save_preset_cb(trig, audio, name, ref_text, lang, sp, du, ns, gs, dn, pp, po):
@@ -1407,6 +1408,7 @@ def build_demo(
                 vc_po,
             ],
             outputs=[vc_preset, vc_status, library_trigger],
+            api_name=False,
         )
 
         def _load_preset_cb(name):
@@ -1428,6 +1430,7 @@ def build_demo(
                 vc_pp,
                 vc_po,
             ],
+            api_name=False,
         )
 
     return demo
