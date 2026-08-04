@@ -150,10 +150,11 @@ def load_voice_preset(voice_name):
     if not voice_name or voice_name == "Tải file mới / Chưa chọn":
         return None, "", "Tự động", 1.0, None, 16, 2.0, True, True, True
 
-    audio_path = None
+    import hashlib
     target_norm = unicodedata.normalize("NFC", str(voice_name).strip())
+    safe_name = hashlib.md5(target_norm.encode("utf-8")).hexdigest()
 
-    # Default values
+    audio_bytes = None
     ref_text = ""
     language = "Tự động"
     speed = 1.0
@@ -189,34 +190,33 @@ def load_voice_preset(voice_name):
                 postprocess = data.get("postprocess", True)
                 b64_str = data.get("audio_b64")
                 if b64_str:
-                    os.makedirs(TEMP_WORK_DIR, exist_ok=True)
-                    tmp_wav = os.path.join(TEMP_WORK_DIR, f"preset_{target_norm}.wav")
-                    with open(tmp_wav, "wb") as wf:
-                        wf.write(base64.b64decode(b64_str))
-                    audio_path = tmp_wav
+                    audio_bytes = base64.b64decode(b64_str)
         except Exception:
             pass
 
     # 2. Fallback to physical audio file if audio_b64 was missing
-    if not audio_path and os.path.exists(VOICES_DIR):
+    if not audio_bytes and os.path.exists(VOICES_DIR):
         for f in os.listdir(VOICES_DIR):
             f_stem, f_ext = os.path.splitext(f)
             if f_ext.lower() in [".wav", ".mp3", ".m4a"]:
                 if unicodedata.normalize("NFC", f_stem) == target_norm:
-                    audio_path = os.path.join(VOICES_DIR, f)
+                    try:
+                        with open(os.path.join(VOICES_DIR, f), "rb") as rf:
+                            audio_bytes = rf.read()
+                    except Exception:
+                        pass
                     break
-            pass
-            # Fallback to reading raw txt
-            txt_path = os.path.join(VOICES_DIR, f"{voice_name}.txt")
-            if os.path.exists(txt_path):
-                try:
-                    with open(txt_path, "r", encoding="utf-8") as f:
-                        ref_text = f.read().strip()
-                except Exception:
-                    pass
+
+    if not audio_bytes:
+        return None, "", "Tự động", 1.0, None, 16, 2.0, True, True, True
+
+    os.makedirs(TEMP_WORK_DIR, exist_ok=True)
+    out_path = os.path.join(TEMP_WORK_DIR, f"preset_{safe_name}.wav")
+    with open(out_path, "wb") as wf:
+        wf.write(audio_bytes)
 
     return (
-        audio_path,
+        out_path,
         ref_text,
         language,
         speed,
