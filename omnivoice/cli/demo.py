@@ -1442,7 +1442,7 @@ demo = None
 
 if __name__ == "__main__":
     main()
-else:
+elif os.getenv("GRADIO_WATCH_MODE") == "1":
     import os
     import sys
     device = os.getenv("DEVICE", "cuda")

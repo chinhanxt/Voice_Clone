@@ -5,6 +5,7 @@ HuggingFace Space entry point for OmniVoice demo.
 
 import logging
 import os
+import sys
 from typing import Any, Dict
 
 logging.basicConfig(
@@ -106,6 +107,7 @@ def generate_fn(*args, **kwargs):
 # Build and launch demo
 # ---------------------------------------------------------------------------
 demo = build_demo(model, CHECKPOINT, generate_fn=generate_fn)
+sys.modules['__main__'].demo = demo
 
 if __name__ == "__main__":
     demo.queue().launch()
