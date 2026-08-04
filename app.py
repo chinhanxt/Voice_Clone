@@ -1,3 +1,4 @@
+import spaces
 import os
 import torch
 
