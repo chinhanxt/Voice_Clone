@@ -67,6 +67,9 @@ _LANG_MAP_VI_TO_EN = {
 _ALL_LANGUAGES = ["Tự động"] + list(_LANG_MAP_VI_TO_EN.keys())
 
 
+import unicodedata
+
+
 def get_saved_voices():
     if not os.path.exists(VOICES_DIR):
         os.makedirs(VOICES_DIR, exist_ok=True)
@@ -76,8 +79,8 @@ def get_saved_voices():
             name = os.path.splitext(f)[0]
             if name.startswith(("10s_", "giong_sach_", "extracted_", "temp_")):
                 continue
-            voices.append(name)
-    return sorted(voices)
+            voices.append(unicodedata.normalize("NFC", name))
+    return sorted(list(set(voices)))
 
 
 def save_voice_preset(
@@ -99,8 +102,9 @@ def save_voice_preset(
         return gr.update(), "Vui lòng tải lên âm thanh mẫu trước khi lưu."
 
     os.makedirs(VOICES_DIR, exist_ok=True)
+    clean_name = unicodedata.normalize("NFC", voice_name.strip())
     ext = os.path.splitext(ref_audio)[1] or ".wav"
-    dest_audio = os.path.join(VOICES_DIR, f"{voice_name.strip()}{ext}")
+    dest_audio = os.path.join(VOICES_DIR, f"{clean_name}{ext}")
 
     try:
         shutil.copy(ref_audio, dest_audio)
@@ -120,14 +124,14 @@ def save_voice_preset(
             "postprocess": bool(postprocess),
         }
 
-        dest_json = os.path.join(VOICES_DIR, f"{voice_name.strip()}.json")
+        dest_json = os.path.join(VOICES_DIR, f"{clean_name}.json")
         with open(dest_json, "w", encoding="utf-8") as f:
             json.dump(metadata, f, ensure_ascii=False, indent=2)
 
         new_voices = ["Tải file mới / Chưa chọn"] + get_saved_voices()
         return (
             gr.Dropdown(choices=new_voices),
-            f"Đã lưu thành công giọng '{voice_name.strip()}' và cấu hình đi kèm!",
+            f"Đã lưu thành công giọng '{clean_name}' và cấu hình đi kèm!",
         )
     except Exception as e:
         return gr.update(), f"Lỗi khi lưu preset: {str(e)}"
@@ -138,13 +142,15 @@ def load_voice_preset(voice_name):
         return None, "", "Tự động", 1.0, None, 16, 2.0, True, True, True
 
     audio_path = None
+    target_norm = unicodedata.normalize("NFC", str(voice_name).strip())
 
-    # Find matching audio file
-    for ext in [".wav", ".mp3", ".m4a"]:
-        p = os.path.join(VOICES_DIR, f"{voice_name}{ext}")
-        if os.path.exists(p):
-            audio_path = p
-            break
+    if os.path.exists(VOICES_DIR):
+        for f in os.listdir(VOICES_DIR):
+            f_stem, f_ext = os.path.splitext(f)
+            if f_ext.lower() in [".wav", ".mp3", ".m4a"]:
+                if unicodedata.normalize("NFC", f_stem) == target_norm:
+                    audio_path = os.path.join(VOICES_DIR, f)
+                    break
 
     if not audio_path:
         return None, "", "Tự động", 1.0, None, 16, 2.0, True, True, True
@@ -161,8 +167,16 @@ def load_voice_preset(voice_name):
     postprocess = True
 
     # Try loading from JSON metadata
-    json_path = os.path.join(VOICES_DIR, f"{voice_name}.json")
-    if os.path.exists(json_path):
+    json_path = None
+    if os.path.exists(VOICES_DIR):
+        for f in os.listdir(VOICES_DIR):
+            f_stem, f_ext = os.path.splitext(f)
+            if f_ext.lower() == ".json":
+                if unicodedata.normalize("NFC", f_stem) == target_norm:
+                    json_path = os.path.join(VOICES_DIR, f)
+                    break
+
+    if json_path and os.path.exists(json_path):
         try:
             with open(json_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
@@ -176,6 +190,7 @@ def load_voice_preset(voice_name):
                 preprocess = data.get("preprocess", True)
                 postprocess = data.get("postprocess", True)
         except Exception:
+            pass
             # Fallback to reading raw txt
             txt_path = os.path.join(VOICES_DIR, f"{voice_name}.txt")
             if os.path.exists(txt_path):
