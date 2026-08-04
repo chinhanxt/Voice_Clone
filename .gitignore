@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.log
+gradio.log
+temp_work/
+saved_voices/
+.hf_cache/
+.DS_Store
