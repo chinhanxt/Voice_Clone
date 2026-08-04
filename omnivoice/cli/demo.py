@@ -506,7 +506,14 @@ def build_demo(
             return None, f"Lỗi: {type(e).__name__}: {e}", gr.update()
 
     # Allow external wrappers (e.g. spaces.GPU for ZeroGPU Spaces)
-    _gen = generate_fn if generate_fn is not None else _gen_core
+    if generate_fn is not None:
+        _gen = generate_fn
+    else:
+        try:
+            import spaces
+            _gen = spaces.GPU(duration=60)(_gen_core)
+        except Exception:
+            _gen = _gen_core
 
     theme = gr.themes.Default(
         primary_hue="green",
