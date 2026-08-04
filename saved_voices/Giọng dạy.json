@@ -1,0 +1,11 @@
+{
+  "ref_text": "",
+  "language": "Tự động",
+  "speed": 1.0,
+  "duration": null,
+  "steps": 16,
+  "cfg_scale": 2.0,
+  "denoise": true,
+  "preprocess": true,
+  "postprocess": true
+}

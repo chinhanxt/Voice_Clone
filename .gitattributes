@@ -1,0 +1,5 @@
+saved_voices/Adam.wav filter=lfs diff=lfs merge=lfs -text
+saved_voices/Chị[[:space:]]gái.wav filter=lfs diff=lfs merge=lfs -text
+saved_voices/Giọng[[:space:]]dạy.wav filter=lfs diff=lfs merge=lfs -text
+saved_voices/HTH.wav filter=lfs diff=lfs merge=lfs -text
+saved_voices/Thuyết[[:space:]]Minh.wav filter=lfs diff=lfs merge=lfs -text
