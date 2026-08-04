@@ -15,7 +15,7 @@ logging.basicConfig(
 import spaces
 import torch
 from omnivoice import OmniVoice
-from omnivoice.cli.demo import build_demo
+from omnivoice.cli.demo import build_demo, VOICES_DIR, TEMP_WORK_DIR
 
 CHECKPOINT = os.environ.get("OMNIVOICE_MODEL", "k2-fsa/OmniVoice")
 
@@ -32,4 +32,4 @@ demo = build_demo(model, CHECKPOINT)
 sys.modules['__main__'].demo = demo
 
 if __name__ == "__main__":
-    demo.queue().launch()
+    demo.queue().launch(allowed_paths=[VOICES_DIR, TEMP_WORK_DIR])
