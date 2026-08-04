@@ -1477,5 +1477,6 @@ elif os.getenv("GRADIO_WATCH_MODE") == "1":
     demo.queue().launch(
         server_name=server_name,
         server_port=server_port,
+        show_api=False,
         allowed_paths=[VOICES_DIR, TEMP_WORK_DIR],
     )

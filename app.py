@@ -32,4 +32,4 @@ demo = build_demo(model, CHECKPOINT)
 sys.modules['__main__'].demo = demo
 
 if __name__ == "__main__":
-    demo.queue().launch(allowed_paths=[VOICES_DIR, TEMP_WORK_DIR])
+    demo.queue().launch(show_api=False, allowed_paths=[VOICES_DIR, TEMP_WORK_DIR])
